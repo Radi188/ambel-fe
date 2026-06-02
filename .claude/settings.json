@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/Users/rady/Documents/front-end/api-ambel/src/auth/decorators"
+    ]
+  }
+}
