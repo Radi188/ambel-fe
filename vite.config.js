@@ -9,6 +9,11 @@ export default defineConfig({
         target: 'http://localhost:3030',
         changeOrigin: true,
       },
+      // Uploaded product images are served by the API at /uploads
+      '/uploads': {
+        target: 'http://localhost:3030',
+        changeOrigin: true,
+      },
     },
   },
 })

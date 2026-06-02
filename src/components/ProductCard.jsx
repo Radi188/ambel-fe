@@ -5,7 +5,7 @@ import { normaliseProduct, getBasePrice, formatPrice } from '../utils/productHel
 
 const PRODUCT_ICONS = { Coffee, Snowflake, Leaf, GlassWater, Utensils };
 
-function ProductIcon({ name, size = 28 }) {
+function ProductIcon({ name, size = 44 }) {
   const Icon = PRODUCT_ICONS[name] ?? Coffee;
   return <Icon size={size} />;
 }

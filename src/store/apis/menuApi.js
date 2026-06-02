@@ -48,6 +48,17 @@ export const menuApi = createApi({
       invalidatesTags: [{ type: 'Product', id: 'LIST' }],
     }),
 
+    // POST /products/:id/image  (multipart, field name "image") — manager+
+    // Uploads a file from the user's computer; returns the product with imageUrl.
+    uploadProductImage: builder.mutation({
+      query: ({ id, file }) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        return { url: `/products/${id}/image`, method: 'POST', data: formData };
+      },
+      invalidatesTags: (_r, _e, { id }) => [{ type: 'Product', id }, { type: 'Product', id: 'LIST' }],
+    }),
+
     // PATCH /products/:id/branches/add  body: { branchId } — super_admin only
     addProductBranch: builder.mutation({
       query: ({ id, branchId }) => ({ url: `/products/${id}/branches/add`, method: 'PATCH', data: { branchId } }),
@@ -93,6 +104,7 @@ export const {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useUploadProductImageMutation,
   useAddProductBranchMutation,
   useRemoveProductBranchMutation,
   useGetCategoriesQuery,

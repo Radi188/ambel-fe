@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { Check, X, AlertTriangle, Coffee, Snowflake, Leaf, GlassWater, Utensils } from 'lucide-react';
+import { Check, X, AlertTriangle, Coffee, Snowflake, Leaf, GlassWater, Utensils, Upload, Image as ImageIcon } from 'lucide-react';
 import TopBar from '../components/TopBar';
 import { selectUser } from '../features/auth/authSlice';
 import {
@@ -9,6 +9,7 @@ import {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
+  useUploadProductImageMutation,
 } from '../store/apis/menuApi';
 import { useGetBranchesQuery } from '../store/apis/branchesApi';
 import { getProductIconName, formatPrice } from '../utils/productHelpers';
@@ -149,10 +150,41 @@ function ProductFormModal({ product, categories, userRole, onClose }) {
 
   const [createProduct, { isLoading: creating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
+  const [uploadImage,   { isLoading: uploading }] = useUploadProductImageMutation();
   const [error, setError]     = useState('');
-  const isLoading             = creating || updating;
+  // Once created, remember the id so a retry edits instead of creating a duplicate.
+  const [savedId, setSavedId] = useState(product?._id ?? null);
+  const [imageFile, setImageFile] = useState(null); // File chosen from computer
+  const isLoading             = creating || updating || uploading;
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+
+  // Preview: a freshly picked file, otherwise the existing/typed URL.
+  const previewSrc = useMemo(() => {
+    if (imageFile) return URL.createObjectURL(imageFile);
+    return form.imageUrl || null;
+  }, [imageFile, form.imageUrl]);
+
+  // An uploaded image is stored as a /uploads/... path — show a clean caption
+  // for it instead of exposing the raw internal path in the URL input.
+  const isUploadedImage = !imageFile && form.imageUrl.startsWith('/uploads/');
+
+  useEffect(() => {
+    if (imageFile && previewSrc) return () => URL.revokeObjectURL(previewSrc);
+  }, [previewSrc, imageFile]);
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setError('Please choose an image file.'); return; }
+    if (file.size > 5 * 1024 * 1024)     { setError('Image must be 5 MB or smaller.'); return; }
+    setError('');
+    setImageFile(file);
+    set('imageUrl', ''); // a chosen file takes precedence over a typed URL
+  };
+
+  const clearImage = () => { setImageFile(null); set('imageUrl', ''); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -184,8 +216,20 @@ function ProductFormModal({ product, categories, userRole, onClose }) {
     };
 
     try {
-      if (isEdit) await updateProduct({ id: product._id, ...body }).unwrap();
-      else        await createProduct(body).unwrap();
+      // Create or update first so we have a product id to attach the image to.
+      let id = savedId;
+      if (id) {
+        await updateProduct({ id, ...body }).unwrap();
+      } else {
+        const created = await createProduct(body).unwrap();
+        id = created._id;
+        setSavedId(id);
+      }
+      // Upload the chosen file (if any) after the product exists.
+      if (imageFile) {
+        await uploadImage({ id, file: imageFile }).unwrap();
+        setImageFile(null);
+      }
       onClose();
     } catch (err) {
       const msgs = err?.data?.message;
@@ -287,15 +331,40 @@ function ProductFormModal({ product, categories, userRole, onClose }) {
             />
           </div>
 
-          {/* Image URL */}
+          {/* Image — upload from computer or paste a URL */}
           <div className="shift-field">
-            <label className="shift-label">Image URL</label>
-            <input
-              className="shift-input"
-              placeholder="https://… (optional)"
-              value={form.imageUrl}
-              onChange={(e) => set('imageUrl', e.target.value)}
-            />
+            <label className="shift-label">Image</label>
+            <div className="menu-image-field">
+              <div className="menu-image-preview">
+                {previewSrc
+                  ? <img src={previewSrc} alt="Preview" />
+                  : <span className="menu-image-placeholder"><ImageIcon size={20} /></span>}
+              </div>
+              <div className="menu-image-controls">
+                <div className="menu-image-btns">
+                  <label className="menu-upload-btn">
+                    <Upload size={14} />
+                    {imageFile || form.imageUrl ? 'Change image' : 'Upload from computer'}
+                    <input type="file" accept="image/*" onChange={handleFile} hidden />
+                  </label>
+                  {(imageFile || form.imageUrl) && (
+                    <button type="button" className="menu-image-remove" onClick={clearImage}>Remove</button>
+                  )}
+                </div>
+                {imageFile ? (
+                  <span className="menu-image-caption">{imageFile.name} — uploads when you save</span>
+                ) : isUploadedImage ? (
+                  <span className="menu-image-caption">Uploaded from computer</span>
+                ) : (
+                  <input
+                    className="shift-input"
+                    placeholder="…or paste an image URL"
+                    value={form.imageUrl}
+                    onChange={(e) => { set('imageUrl', e.target.value); setImageFile(null); }}
+                  />
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Available toggle */}

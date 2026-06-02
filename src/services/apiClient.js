@@ -14,6 +14,13 @@ apiClient.interceptors.request.use((config) => {
 
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
+  // For file uploads, drop the JSON content-type so the browser sets the
+  // correct multipart/form-data boundary.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    if (config.headers.delete) config.headers.delete('Content-Type');
+    else delete config.headers['Content-Type'];
+  }
+
   // Branch scoping precedence:
   // 1. `x-skip-branch` flag → no branch scope (super-admin cross-branch view)
   // 2. caller-provided `x-branch-id` → use it as-is (explicit scoping)
