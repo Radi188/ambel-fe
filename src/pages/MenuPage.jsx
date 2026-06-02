@@ -12,7 +12,7 @@ import {
   useUploadProductImageMutation,
 } from '../store/apis/menuApi';
 import { useGetBranchesQuery } from '../store/apis/branchesApi';
-import { getProductIconName, formatPrice } from '../utils/productHelpers';
+import { getProductIconName, formatPrice, resolveImageUrl } from '../utils/productHelpers';
 
 const PRODUCT_ICONS = { Coffee, Snowflake, Leaf, GlassWater, Utensils };
 function ProductIcon({ name, size = 22 }) {
@@ -162,7 +162,7 @@ function ProductFormModal({ product, categories, userRole, onClose }) {
   // Preview: a freshly picked file, otherwise the existing/typed URL.
   const previewSrc = useMemo(() => {
     if (imageFile) return URL.createObjectURL(imageFile);
-    return form.imageUrl || null;
+    return form.imageUrl ? resolveImageUrl(form.imageUrl) : null;
   }, [imageFile, form.imageUrl]);
 
   // An uploaded image is stored as a /uploads/... path — show a clean caption
@@ -546,7 +546,7 @@ export default function MenuPage() {
                   <td>
                     <div className="menu-table-name">
                       {item.imageUrl
-                        ? <img src={item.imageUrl} alt={item.name} className="menu-table-img" />
+                        ? <img src={resolveImageUrl(item.imageUrl)} alt={item.name} className="menu-table-img" />
                         : <span className="menu-table-emoji"><ProductIcon name={getProductIconName(item.name, item.category?.name)} /></span>
                       }
                       <div>

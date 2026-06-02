@@ -40,6 +40,22 @@ export function formatPrice(amount) {
   return `$${Number(amount).toFixed(2)}`;
 }
 
+// Origin of the API (base URL without the trailing /api). Empty when the base
+// is relative (dev proxy), so paths stay relative in that case.
+const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL ?? '/api').replace(/\/api\/?$/, '');
+
+/**
+ * Resolve a product image URL for display.
+ * Uploaded images are stored as `/uploads/...` paths served by the API host,
+ * so prefix them with the API origin. Absolute URLs are returned unchanged.
+ */
+export function resolveImageUrl(url) {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (url.startsWith('/uploads') && API_ORIGIN) return `${API_ORIGIN}${url}`;
+  return url;
+}
+
 /** Normalise an API product into the shape the cart slice expects */
 export function normaliseProduct(p) {
   return {

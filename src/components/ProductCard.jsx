@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import { Coffee, Snowflake, Leaf, GlassWater, Utensils } from 'lucide-react';
 import { selectCartItems } from '../features/cart/cartSlice';
-import { normaliseProduct, getBasePrice, formatPrice } from '../utils/productHelpers';
+import { normaliseProduct, getBasePrice, formatPrice, resolveImageUrl } from '../utils/productHelpers';
 
 const PRODUCT_ICONS = { Coffee, Snowflake, Leaf, GlassWater, Utensils };
 
@@ -26,7 +26,7 @@ export default function ProductCard({ item, onSelect }) {
       <div className="product-card product-card--disabled">
         <div className="product-emoji-wrap">
           {item.imageUrl
-            ? <img src={item.imageUrl} alt={item.name} className="product-img" />
+            ? <img src={resolveImageUrl(item.imageUrl)} alt={item.name} className="product-img" />
             : <span className="product-emoji"><ProductIcon name={normaliseProduct(item).icon} /></span>
           }
         </div>
@@ -49,7 +49,7 @@ export default function ProductCard({ item, onSelect }) {
     >
       <div className="product-emoji-wrap">
         {item.imageUrl
-          ? <img src={item.imageUrl} alt={item.name} className="product-img" />
+          ? <img src={resolveImageUrl(item.imageUrl)} alt={item.name} className="product-img" />
           : <span className="product-emoji"><ProductIcon name={normaliseProduct(item).icon} /></span>
         }
         {cartQty > 0 && <span className="product-qty-badge">{cartQty}</span>}

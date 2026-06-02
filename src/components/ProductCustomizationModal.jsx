@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { addItem } from '../features/cart/cartSlice';
-import { normaliseProduct, getProductIconName, getBasePrice, formatPrice } from '../utils/productHelpers';
+import { normaliseProduct, getProductIconName, getBasePrice, formatPrice, resolveImageUrl } from '../utils/productHelpers';
 import { Coffee, Snowflake, Leaf, GlassWater, Utensils } from 'lucide-react';
 const PRODUCT_ICONS = { Coffee, Snowflake, Leaf, GlassWater, Utensils };
 function ProductIcon({ name, size = 32 }) {
@@ -117,7 +117,7 @@ export default function ProductCustomizationModal({ product, onClose }) {
           <div className="custom-product-info">
             <div className="custom-emoji-wrap">
               {product.imageUrl
-                ? <img src={product.imageUrl} alt={product.name} className="custom-img" />
+                ? <img src={resolveImageUrl(product.imageUrl)} alt={product.name} className="custom-img" />
                 : <span className="custom-emoji"><ProductIcon name={iconName} /></span>
               }
             </div>

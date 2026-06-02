@@ -6,7 +6,7 @@ import {
   useCreateCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,
 } from '../../store/apis/menuApi';
 import { useGetBranchesQuery } from '../../store/apis/branchesApi';
-import { getProductIconName, formatPrice } from '../../utils/productHelpers';
+import { getProductIconName, formatPrice, resolveImageUrl } from '../../utils/productHelpers';
 
 const PRODUCT_TYPES = ['main', 'topping'];
 
@@ -466,7 +466,7 @@ export default function AdminMenuPage() {
                           <div className="so-cashier">
                             <span style={{ fontSize: 20 }}>
                               {p.imageUrl
-                                ? <img src={p.imageUrl} alt={p.name} style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 6 }} />
+                                ? <img src={resolveImageUrl(p.imageUrl)} alt={p.name} style={{ width: 28, height: 28, objectFit: 'cover', borderRadius: 6 }} />
                                 : <Coffee size={22} />
                               }
                             </span>
